@@ -1,0 +1,102 @@
+version: "3"
+services:
+  auth:
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+      target: build
+    command: npm run start:dev auth
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./apps/auth/.env
+    depends_on:
+      - users_database
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+  tasks:
+    build:
+      context: .
+      dockerfile: ./apps/tasks/Dockerfile
+      target: build
+    command: npm run start:dev tasks
+    ports:
+      - '${PORT}:${PORT}'
+    env_file:
+      - ./apps/tasks/.env
+    depends_on:
+      - users_database
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    networks:
+      - backend
+  users:
+    build:
+      context: .
+      dockerfile: ./apps/users/Dockerfile
+      target: build
+    command: npm run start:dev users
+    ports:
+      - '3002:3002'
+    env_file:
+      - ./apps/users/.env
+    depends_on:
+      - users_database
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+  users_database: ###Each micro should get its own DB to respect principal of isolation
+    image: mysql:8.0.33
+    restart: on-failure
+    ports:
+      - '${USERS_DB_PORT}:${USERS_DB_PORT}'
+    environment:
+      ###### These values would all be fed through the ci or something like docker secrets
+      - MYSQL_USER=${USERS_MYSQL_USER}
+      - MYSQL_PASSWORD=${USERS_MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${USERS_MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${USERS_DATABASE_NAME}
+    volumes:
+        - users_data:/var/lib/mysql_users_db
+    networks:
+      - backend
+  tasks_database:
+      image: mysql:8.0.33
+      restart: on-failure
+      ports:
+        - '${TASKS_DB_PORT}:${TASKS_DB_PORT}'
+      environment:
+        ###### These values would all be fed through the ci or something like docker secrets
+        - MYSQL_USER=${TASKS_MYSQL_USER}
+        - MYSQL_PASSWORD=${TASKS_MYSQL_PASSWORD}
+        - MYSQL_ROOT_PASSWORD=${TASKS_MYSQL_ROOT_PASSWORD}
+        - MYSQl_DB=${TASKS_DATABASE_NAME}
+        - MYSQL_DATABASE=${TASKS_DATABASE_NAME}
+      volumes:
+        - tasks_data:/var/lib/mysql_tasks_db
+      networks:
+        - backend
+  rabbitmq:
+    image: rabbitmq:3-management
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - backend
+networks:
+  backend:
+    driver: bridge
+volumes:
+  users_data:
+    driver: local
+  tasks_data:
+    driver: local
+  rabbit_data:
+    driver: local
