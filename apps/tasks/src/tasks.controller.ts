@@ -1,47 +1,53 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Delete,
-  Param,
-} from '@nestjs/common';
+import { Body, Controller, Post, Patch, Delete, Param } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto, UpdateTaskDto } from './dto';
-import { ActiveUser } from '@app/common/interface/activeUser';
+import { CreateTaskDto, UpdateTaskDto } from '../../../libs/common/src/dto';
+import { Ctx, EventPattern, Payload, RmqContext } from '@nestjs/microservices';
+import { RmqService, Task_Payload } from '@app/common';
 
-interface Payload<T> {
-  activeUser: ActiveUser;
-  task: T;
-}
-
-@Controller('/task/')
+@Controller()
 export class TasksController {
-  constructor(private readonly tasksService: TasksService) {}
+  constructor(
+    private readonly tasksService: TasksService,
+    private readonly rmqService: RmqService,
+  ) {}
 
-  @Get('/list/:id')
-  list(@Param('id') technicianId) {
-    return this.tasksService.list(technicianId);
+  @EventPattern('list_tasks')
+  async list(@Payload() id: number, @Ctx() context: RmqContext) {
+    const vals = await this.tasksService.list(id);
+    this.rmqService.ackMessage(context);
+    return vals;
   }
 
-  @Post('/create')
-  createTask(@Body() payload: Payload<CreateTaskDto>) {
+  @EventPattern('create_task')
+  createTask(
+    @Body() payload: Task_Payload<CreateTaskDto>,
+    @Ctx() context: RmqContext,
+  ) {
+    this.rmqService.ackMessage(context); //todo: err handling logic, only ack message on success
     return this.tasksService.createOne(payload.task, payload.activeUser);
   }
 
-  @Patch('/complete')
-  completeTask(@Body() payload: Payload<UpdateTaskDto>) {
+  @EventPattern('complete_task')
+  completeTask(
+    @Body() payload: Task_Payload<UpdateTaskDto>,
+    @Ctx() context: RmqContext,
+  ) {
+    this.rmqService.ackMessage(context); //todo: err handling logic, only ack message on success
     return this.tasksService.completeTask(payload.task);
   }
 
-  @Patch('/reopen')
-  reOpenTask(@Body() payload: Payload<UpdateTaskDto>) {
+  @EventPattern('reopen_task')
+  reOpenTask(
+    @Body() payload: Task_Payload<UpdateTaskDto>,
+    @Ctx() context: RmqContext,
+  ) {
+    this.rmqService.ackMessage(context); //todo: err handling logic, only ack message on success
     return this.tasksService.reOpenTask(payload.task);
   }
 
-  @Delete('/:id')
-  deleteTask(@Param('id') id: number) {
+  @EventPattern('delete_task')
+  deleteTask(@Body() id: number, @Ctx() context: RmqContext) {
+    this.rmqService.ackMessage(context); //todo: err handling logic, only ack message on success
     return this.tasksService.delete(id);
   }
 }

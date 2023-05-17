@@ -1,14 +1,14 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "apps/tasks/src",
+  "sourceRoot": "apps/choreographer/src",
   "compilerOptions": {
     "deleteOutDir": true,
     "webpack": true,
-    "tsConfigPath": "apps/tasks/tsconfig.app.json"
+    "tsConfigPath": "apps/choreographer/tsconfig.app.json"
   },
   "monorepo": true,
-  "root": "apps/tasks",
+  "root": "apps/choreographer",
   "projects": {
     "tasks": {
       "type": "application",
@@ -44,6 +44,15 @@
       "sourceRoot": "libs/common/src",
       "compilerOptions": {
         "tsConfigPath": "libs/common/tsconfig.lib.json"
+      }
+    },
+    "choreographer": {
+      "type": "application",
+      "root": "apps/choreographer",
+      "entryFile": "main",
+      "sourceRoot": "apps/choreographer/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/choreographer/tsconfig.app.json"
       }
     }
   }

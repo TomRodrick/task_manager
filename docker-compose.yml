@@ -1,5 +1,25 @@
 version: "3"
 services:
+  choreographer:
+    build:
+      context: .
+      dockerfile: ./apps/choreographer/Dockerfile
+      target: build
+    command: npm run start:dev choreographer
+    ports:
+      - '${CHOREOGRAPHER_PORT}:${CHOREOGRAPHER_PORT}'
+    env_file:
+      - ./apps/choreographer/.env
+      - ./.env
+    depends_on:
+      - auth
+      - tasks
+      - users
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - backend
   auth:
     build:
       context: .
@@ -7,15 +27,17 @@ services:
       target: build
     command: npm run start:dev auth
     ports:
-      - '3000:3000'
+      - '${AUTH_PORT}:${AUTH_PORT}'
     env_file:
       - ./apps/auth/.env
+      - ./.env
     depends_on:
       - users_database
       - rabbitmq
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
+    networks:
+      - backend
   tasks:
     build:
       context: .
@@ -23,15 +45,15 @@ services:
       target: build
     command: npm run start:dev tasks
     ports:
-      - '${PORT}:${PORT}'
+      - '${TASKS_PORT}:${TASKS_PORT}'
     env_file:
       - ./apps/tasks/.env
+      - ./.env
     depends_on:
       - users_database
       - rabbitmq
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
     networks:
       - backend
   users:
@@ -41,15 +63,17 @@ services:
       target: build
     command: npm run start:dev users
     ports:
-      - '3002:3002'
+      - '${USERS_PORT}:${USERS_PORT}'
     env_file:
       - ./apps/users/.env
+      - ./.env
     depends_on:
       - users_database
       - rabbitmq
     volumes:
       - .:/usr/src/app
-      - /usr/src/app/node_modules
+    networks:
+      - backend
   users_database: ###Each micro should get its own DB to respect principal of isolation
     image: mysql:8.0.33
     restart: on-failure
@@ -85,8 +109,16 @@ services:
     image: rabbitmq:3-management
     volumes:
       - rabbit_data:/var/lib/rabbitmq
+    environment: ##This should be pulled from ci and public access should be limited by IP but leaving for now
+      - RABBITMQ_DEFAULT_USER=user
+      - RABBITMQ_DEFAULT_PASS=password
+    # healthcheck: ##todo: health checks for services
+    #   test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+    #   interval: 5s
+    #   timeout: 15s
+    #   retries: 1
     ports:
-      - "5672:5672"
+      - "5672:5672" ##todo:env var
       - "15672:15672"
     networks:
       - backend

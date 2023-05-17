@@ -4,6 +4,7 @@ import { TasksService } from './tasks.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { Task } from './task.entity';
+import { RmqModule } from '@app/common';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { Task } from './task.entity';
       inject: [ConfigService],
     }),
     TypeOrmModule.forFeature([Task]),
+    RmqModule,
   ],
   controllers: [TasksController],
   providers: [TasksService],

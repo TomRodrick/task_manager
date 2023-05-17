@@ -1,3 +1,4 @@
+import { UserType } from '@app/common';
 import {
   Entity,
   Column,
@@ -7,18 +8,15 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Task {
+export class User {
   @PrimaryGeneratedColumn('increment') //typically would use UUID but we are using "synchronize:true" for dev purposes which has issues with uuidss
   id: number;
 
-  @Column('varchar', { length: 2500 })
-  description: string;
-
-  @Column('varchar', { length: 250 })
-  title: string;
-
-  @Column({ default: null })
-  completed_on: Date;
+  @Column({
+    type: 'enum',
+    enum: UserType,
+  })
+  user_type: UserType;
 
   @CreateDateColumn()
   created_at: Date; // Creation date
@@ -26,6 +24,6 @@ export class Task {
   @UpdateDateColumn()
   updated_at: Date;
 
-  @Column()
-  technician_id: number;
+  @Column('varchar', { length: 250 })
+  email: string;
 }
