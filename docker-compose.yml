@@ -1,6 +1,7 @@
 version: "3"
 services:
   choreographer:
+    restart: on-failure
     build:
       context: .
       dockerfile: ./apps/choreographer/Dockerfile
@@ -21,6 +22,7 @@ services:
     networks:
       - backend
   auth:
+    restart: on-failure
     build:
       context: .
       dockerfile: ./apps/auth/Dockerfile
@@ -39,6 +41,7 @@ services:
     networks:
       - backend
   tasks:
+    restart: on-failure
     build:
       context: .
       dockerfile: ./apps/tasks/Dockerfile

@@ -1,8 +1,8 @@
 import {
   Injectable,
   Logger,
-  UnauthorizedException,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { Task } from './task.entity';
 import { Repository } from 'typeorm';
@@ -75,8 +75,11 @@ export class TasksService {
   }
 
   public async completeTask(task: UpdateTaskDto) {
-    const savedTask = await this.findById(task.id);
+    const savedTask = await this.findById(+task.id);
 
+    if (!savedTask) {
+      throw new RpcException(new NotFoundException('Task could not be found'));
+    }
     //if we already completed a task, don't update it.
     //in case of duplicated or erroneous calls
     if (savedTask?.completed_on) {

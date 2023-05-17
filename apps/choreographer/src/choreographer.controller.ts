@@ -20,24 +20,27 @@ import {
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError, throwError } from 'rxjs';
 
+/**
+ 
+   Todo: add route prefixes like /tasks and /users to controller & rm from route
+   
+ **/
 @Controller()
 export class ChoreographerController {
   constructor(
-    private readonly choreographerService: ChoreographerService,
     @Inject(TASKS_SERVICE) private tasksClient: ClientProxy,
     @Inject(USERS_SERVICE) private usersClient: ClientProxy,
   ) {}
   /***********************BEGIN: TASK ROUTES*******************************/
   @Get('/tasks/list/:id')
   async listTasks(@Param('id') id) {
-    return this.tasksClient.send('list_tasks', id).pipe(
-      catchError((error) =>
-        throwError(() => {
-          console.log(error);
-          return new RpcException(error.response);
-        }),
-      ),
-    );
+    return this.tasksClient
+      .send('list_tasks', id)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
 
   @Post('/tasks/create')
