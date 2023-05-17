@@ -1,9 +1,15 @@
-import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  UnauthorizedException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Task } from './task.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskDto, UpdateTaskDto } from '../../../libs/common/src/dto';
 import { ActiveUser } from '@app/common/interface/activeUser';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class TasksService {
@@ -14,10 +20,18 @@ export class TasksService {
   ) {}
 
   public async list(technician_id: number) {
+    //todo: check id is number
     if (!technician_id) {
-      throw new UnauthorizedException('technician_id is required');
+      throw new RpcException(
+        new BadRequestException('technician_id is required'),
+      );
     }
 
+    if (isNaN(technician_id)) {
+      throw new RpcException(
+        new BadRequestException('technician_id is invalid'),
+      );
+    }
     return this.repo.find({
       where: {
         technician_id,
@@ -25,14 +39,19 @@ export class TasksService {
     });
   }
 
-  public async findById(id) {
+  public async findById(id: number) {
+    //todo: check id is number
     const query = { where: { id } };
     return this.repo.findOne(query);
   }
 
   public async createOne(task: CreateTaskDto, activeUser: ActiveUser) {
     if (!task.description || !task.title) {
-      return { error: "Fields 'title' and 'description' are required." };
+      throw new RpcException(
+        new BadRequestException(
+          "Fields 'title' and 'description' are required.",
+        ),
+      );
     }
 
     const newTask = new Task();
@@ -43,7 +62,7 @@ export class TasksService {
     return this.repo.save(newTask).catch((err) => {
       //todo: ideally this is a switch base off the sql messsage
       //so we don't accidenttally expose sensitive info about our db
-      return { error: err.sqlMessage };
+      throw new RpcException(new BadRequestException(err.sqlMessage));
     });
   }
 
@@ -51,7 +70,7 @@ export class TasksService {
     return this.repo.update(task.id, task).catch((err) => {
       //todo: ideally this is a switch base off the sql messsage
       //so we don't accidenttally expose sensitive info about our db
-      return { error: err.sqlMessage };
+      throw new RpcException(new BadRequestException(err.sqlMessage));
     });
   }
 

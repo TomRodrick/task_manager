@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { RmqModule } from '@app/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users.entity';
+import { User } from './user.entity';
 
 @Module({
   imports: [

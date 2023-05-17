@@ -17,8 +17,8 @@ import {
   USERS_SERVICE,
   CreateUserDto,
 } from '@app/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { lastValueFrom } from 'rxjs';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
+import { catchError, throwError } from 'rxjs';
 
 @Controller()
 export class ChoreographerController {
@@ -30,33 +30,81 @@ export class ChoreographerController {
   /***********************BEGIN: TASK ROUTES*******************************/
   @Get('/tasks/list/:id')
   async listTasks(@Param('id') id) {
-    return lastValueFrom(this.tasksClient.send('list_tasks', id));
+    return this.tasksClient.send('list_tasks', id).pipe(
+      catchError((error) =>
+        throwError(() => {
+          console.log(error);
+          return new RpcException(error.response);
+        }),
+      ),
+    );
   }
 
   @Post('/tasks/create')
   createTask(@Body() payload: Task_Payload<CreateTaskDto>) {
-    return lastValueFrom(this.tasksClient.send('create_task', payload));
+    return this.tasksClient
+      .send('create_task', payload)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
 
   @Patch('/tasks/complete')
   completeTask(@Body() payload: Task_Payload<UpdateTaskDto>) {
-    return lastValueFrom(this.tasksClient.send('complete_task', payload));
+    return this.tasksClient
+      .send('complete_task', payload)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
 
   @Patch('/tasks/reopen')
   reOpenTask(@Body() payload: Task_Payload<UpdateTaskDto>) {
-    return lastValueFrom(this.tasksClient.send('reopen_task', payload));
+    return this.tasksClient
+      .send('reopen_task', payload)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
 
   @Delete('/tasks/:id')
   deleteTask(@Param('id') id: number) {
-    return lastValueFrom(this.tasksClient.send('delete_task', id));
+    return this.tasksClient
+      .send('delete_task', id)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
   /***********************END: TASK ROUTES*******************************/
 
   /***********************BEGIN: USER ROUTES*******************************/
   @Post('/users/create')
   createUser(@Body() payload: CreateUserDto) {
-    return lastValueFrom(this.usersClient.send('create_user', payload));
+    return this.usersClient
+      .send('create_user', payload)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
+  }
+
+  @Get('/users/:id')
+  findUser(@Param('id') id: number) {
+    return this.usersClient
+      .send('find_user', id)
+      .pipe(
+        catchError((error) =>
+          throwError(() => new RpcException(error.response)),
+        ),
+      );
   }
 }

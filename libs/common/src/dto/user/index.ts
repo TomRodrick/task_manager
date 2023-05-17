@@ -1,1 +1,1 @@
-export * from './create-task.dto';
+export * from './create-user.dto';

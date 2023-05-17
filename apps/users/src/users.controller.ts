@@ -1,7 +1,7 @@
 import { Body, Controller } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { Ctx, EventPattern, RmqContext } from '@nestjs/microservices';
-import { RmqService, CreateTaskDto } from '@app/common';
+import { RmqService, CreateUserDto } from '@app/common';
 
 @Controller()
 export class UsersController {
@@ -11,8 +11,16 @@ export class UsersController {
   ) {}
 
   @EventPattern('create_user')
-  createUser(@Body() payload: CreateTaskDto, @Ctx() context: RmqContext) {
-    console.log('CREATE USER CALLED');
-    this.rmqService.ackMessage(context); //todo: err handling logic, only ack message on success
+  async createUser(@Body() payload: CreateUserDto, @Ctx() context: RmqContext) {
+    //todo: err handling logic, only ack message on success
+    //or on legitimate validation error
+    this.rmqService.ackMessage(context);
+    return this.usersService.createOne(payload);
+  }
+
+  @EventPattern('find_user')
+  async findUser(@Body() id: number, @Ctx() context: RmqContext) {
+    this.rmqService.ackMessage(context);
+    return this.usersService.findById(+id);
   }
 }

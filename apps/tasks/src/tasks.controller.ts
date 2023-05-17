@@ -13,9 +13,8 @@ export class TasksController {
 
   @EventPattern('list_tasks')
   async list(@Payload() id: number, @Ctx() context: RmqContext) {
-    const vals = await this.tasksService.list(id);
     this.rmqService.ackMessage(context);
-    return vals;
+    return this.tasksService.list(+id);
   }
 
   @EventPattern('create_task')

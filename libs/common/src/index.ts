@@ -5,3 +5,4 @@ export * from './interface/activeUser';
 export * from './interface/taskPayload';
 export * from './constants';
 export * from './dto';
+export * from './db/test.db';
