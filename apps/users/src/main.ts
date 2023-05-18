@@ -11,6 +11,7 @@ const options = rmqService.getRmqOptions(
   [configService.get('AMQP_URL')],
 );
 
+//ideally we listen to users and auth queue but too complex for this implementation
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(
     UsersModule,

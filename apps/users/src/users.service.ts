@@ -14,10 +14,10 @@ export class UsersService {
   ) {}
 
   public async createOne(user: CreateUserDto) {
-    if (!user.email || !user.user_type) {
+    if (!user.email || !user.user_type || !user.password) {
       //todo: logic to ensure we dont 200
       throw new RpcException(
-        new BadRequestException('email and user_type are required'),
+        new BadRequestException('email, password, and user_type are required'),
       );
     }
 
@@ -30,6 +30,7 @@ export class UsersService {
     }
 
     const newUser = new User();
+    newUser.password = user.password; //setter method uses salt & hash logic
     newUser.email = user.email;
     newUser.user_type = user.user_type;
 
@@ -47,5 +48,13 @@ export class UsersService {
     }
     const query = { where: { id } };
     return this.repo.findOne(query);
+  }
+
+  public updateRefreshToken(id: number, token: string) {
+    return this.repo.update(id, { refresh_token: token }).catch((err) => {
+      //todo: ideally this is a switch base off the sql messsage
+      //so we don't accidenttally expose sensitive info about our db
+      throw new RpcException(new BadRequestException(err.sqlMessage));
+    });
   }
 }

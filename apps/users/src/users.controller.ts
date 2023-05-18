@@ -23,4 +23,14 @@ export class UsersController {
     this.rmqService.ackMessage(context);
     return this.usersService.findById(+id);
   }
+
+  //this type of stuff should be in its own auth queue
+  @EventPattern('set_refresh_token')
+  async refreshToken(
+    @Body() payload: { id; token },
+    @Ctx() context: RmqContext,
+  ) {
+    this.rmqService.ackMessage(context);
+    return this.usersService.updateRefreshToken(+payload.id, payload.token);
+  }
 }
