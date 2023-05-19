@@ -12,7 +12,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3003/tasks/list/1",
+					"raw": "http://localhost:3003/tasks/list/5",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -21,7 +21,7 @@
 					"path": [
 						"tasks",
 						"list",
-						"1"
+						"5"
 					]
 				}
 			},
@@ -34,7 +34,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"task\": {\n        \"description\": \"MY DESC\",\n         \"title\": \"Cool task title\"\n       \n    },\n    \"activeUser\": {\n        \"id\": 1,\n        \"userType\": 0\n    }\n}",
+					"raw": "{\n    \"task\": {\n        \"description\": \"MY DESC\",\n         \"title\": \"Cool task title\"\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -63,7 +63,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"task\": {\n        \"id\": 11\n    },\n    \"activeUser\": {\n        \"id\": \"123\",\n        \"userType\": 0\n    }\n}",
+					"raw": "{\n    \"task\": {\n        \"id\": 1\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -92,7 +92,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"task\": {\n        \"id\": 1\n    },\n    \"activeUser\": {\n        \"id\": \"123\",\n        \"userType\": 0\n    }\n}",
+					"raw": "{\n    \"task\": {\n        \"id\": 7\n    }\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -120,7 +120,7 @@
 				"method": "DELETE",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:3003/tasks/9",
+					"raw": "http://localhost:3003/tasks/1",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -128,7 +128,7 @@
 					"port": "3003",
 					"path": [
 						"tasks",
-						"9"
+						"1"
 					]
 				}
 			},
@@ -141,7 +141,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"email\": \"login@email.com\",\n    \"user_type\": \"technician\",\n    \"password\": \"test\"\n}",
+					"raw": "{\n    \"email\": \"tech0@email.com\",\n    \"user_type\": \"technician\",\n    \"password\": \"test\"\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -219,7 +219,7 @@
 					"    body: {",
 					"        mode: 'urlencoded',",
 					"        urlencoded: [",
-					"            {key: 'email', value: \"tech@email.com\"},",
+					"            {key: 'email', value: \"tech0@email.com\"},",
 					"            {key: 'password', value: \"test\"}",
 					"        ]",
 					"    }",
