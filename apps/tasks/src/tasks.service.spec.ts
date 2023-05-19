@@ -1,12 +1,16 @@
+import { jest } from '@jest/globals';
 /* eslint-disable @typescript-eslint/no-empty-function */
 import { TasksService } from './tasks.service';
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmTestingModule, UserType } from '@app/common';
 import { Task } from './task.entity';
+import { Logger } from '@nestjs/common';
+import { mockDeep } from 'jest-mock-extended';
 
-describe.only('UsersService', () => {
+describe('UsersService', () => {
   let tasksService: TasksService;
+  const logger = mockDeep<Logger>();
   const activeUser = {
     user_type: UserType.TECH,
     userId: 1,
@@ -19,7 +23,7 @@ describe.only('UsersService', () => {
     id: undefined,
   };
 
-  let task;
+  let task: Task;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,6 +31,7 @@ describe.only('UsersService', () => {
       providers: [TasksService],
     }).compile();
     tasksService = module.get<TasksService>(TasksService);
+    module.useLogger(logger);
   });
 
   beforeEach(async () => {
@@ -70,13 +75,40 @@ describe.only('UsersService', () => {
       });
     });
     describe('When payload is valid', () => {
-      //todo: seed data with tasks for other techs and ensure its not returned
+      beforeEach(async () => {
+        await tasksService.createOne(taskData, activeUser);
+        await tasksService.createOne(taskData, activeUser);
+        await tasksService.createOne(taskData, activeUser);
+        await tasksService.createOne(
+          { ...taskData },
+          { ...activeUser, userId: 999 },
+        );
+      });
+      //todo: seed data with several tasks, some for other techs and ensure only activeUsers are returned
       it('should return an array of tasks for the technician requested', async () => {
         const res = await tasksService.list(activeUser.userId, activeUser);
         expect(Array.isArray(res));
         expect(res[0].technician_id).toBe(activeUser.userId);
         expect(res[0].title).toBe(task.title);
         expect(res[0].description).toBe(task.description);
+      });
+      it('should return ONLY the activeUsers tasks', async () => {
+        const res = await tasksService.list(activeUser.userId, activeUser);
+        res.forEach((task) => {
+          expect(task.technician_id).toBe(activeUser.userId);
+        });
+        expect(res.length).toBe(4);
+      });
+      it('should return a task array if requested by a manager', async () => {
+        const res = await tasksService.list(activeUser.userId, {
+          ...activeUser,
+          userId: 991,
+          user_type: UserType.MANAGER,
+        });
+        res.forEach((task) => {
+          expect(task.technician_id).toBe(activeUser.userId);
+        });
+        expect(res.length).toBe(4);
       });
     });
   });
@@ -206,6 +238,13 @@ describe.only('UsersService', () => {
         const updatedTask = await tasksService['findById'](task.id);
         expect(updatedTask.completed_on).toBeTruthy();
       });
+      it('should notify the manager', async () => {
+        await tasksService.completeTask(task, activeUser);
+        const updatedTask = await tasksService['findById'](task.id);
+        expect(logger.log).toHaveBeenCalledWith(
+          `*****The technician ${activeUser.email} completed the task: ${updatedTask.title} on ${updatedTask.completed_on}*****`,
+        );
+      });
     });
   });
   describe('reOpenTask', () => {
@@ -251,6 +290,10 @@ describe.only('UsersService', () => {
     describe('When payload is valid', () => {});
   });
   describe('userHasWritePermissions', () => {
+    describe('When payload is NOT valid', () => {});
+    describe('When payload is valid', () => {});
+  });
+  describe('userCanUpdateTask', () => {
     describe('When payload is NOT valid', () => {});
     describe('When payload is valid', () => {});
   });
