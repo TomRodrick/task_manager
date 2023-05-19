@@ -27,14 +27,14 @@ services:
       dockerfile: ./apps/tasks/Dockerfile
       target: build
     command: npm run start:dev tasks
-    ports:
-      - '${TASKS_PORT}:${TASKS_PORT}'
     env_file:
       - ./apps/tasks/.env
       - ./.env
     depends_on:
-      - users_database
-      - rabbitmq
+        tasks_database:
+          condition: service_healthy
+        rabbitmq:
+          condition: service_healthy
     volumes:
       - .:/usr/src/app
     networks:
@@ -45,14 +45,14 @@ services:
       dockerfile: ./apps/users/Dockerfile
       target: build
     command: npm run start:dev users
-    ports:
-      - '${USERS_PORT}:${USERS_PORT}'
     env_file:
       - ./apps/users/.env
       - ./.env
     depends_on:
-      - users_database
-      - rabbitmq
+        users_database:
+          condition: service_healthy
+        rabbitmq:
+          condition: service_healthy
     volumes:
       - .:/usr/src/app
     networks:
@@ -68,8 +68,13 @@ services:
       - MYSQL_PASSWORD=${USERS_MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${USERS_MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${USERS_DATABASE_NAME}
+    healthcheck:
+      test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$USERS_MYSQL_ROOT_PASSWORD' ]
+      interval: 5s
+      timeout: 3s
+      retries: 30
     volumes:
-        - users_data:/var/lib/mysql_users_db
+        - users_data:/var/lib/mysql
     networks:
       - backend
   tasks_database:
@@ -84,8 +89,13 @@ services:
         - MYSQL_ROOT_PASSWORD=${TASKS_MYSQL_ROOT_PASSWORD}
         - MYSQl_DB=${TASKS_DATABASE_NAME}
         - MYSQL_DATABASE=${TASKS_DATABASE_NAME}
+      healthcheck:
+        test: ["CMD", 'mysqladmin', 'ping', '-h', 'localhost', '-u', 'root', '-p$$TASKS_MYSQL_ROOT_PASSWORD' ]
+        interval: 5s
+        timeout: 3s
+        retries: 30
       volumes:
-        - tasks_data:/var/lib/mysql_tasks_db
+        - tasks_data:/var/lib/mysql
       networks:
         - backend
   rabbitmq:
@@ -96,10 +106,10 @@ services:
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
     healthcheck:
-      test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+      test: rabbitmq-diagnostics check_port_connectivity
       interval: 5s
-      timeout: 15s
-      retries: 1
+      timeout: 3s
+      retries: 30
     ports:
       - "5672:5672" ##todo:env var
       - "15672:15672"

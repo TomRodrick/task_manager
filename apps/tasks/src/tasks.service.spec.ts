@@ -284,7 +284,11 @@ describe('UsersService', () => {
     });
   });
 
-  //todo: userCanViewTaskList, userCanUpdateTask, userHasWritePermissions tests
+  //todo: delete, userCanViewTaskList, userCanUpdateTask, userHasWritePermissions tests
+  describe('delete', () => {
+    describe('When payload is NOT valid', () => {});
+    describe('When payload is valid', () => {});
+  });
   describe('userCanViewTaskList', () => {
     describe('When payload is NOT valid', () => {});
     describe('When payload is valid', () => {});
