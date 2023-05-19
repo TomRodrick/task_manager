@@ -31,3 +31,9 @@ docker-compose up
 1. Import the Task_manager.postman_collection.json into postman.
 2. Create a user using the create user request.
 3. Adjust the project's pre-request script to use the newly created user's credentials.
+
+## To test
+
+```bash
+npm run test
+```
