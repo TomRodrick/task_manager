@@ -13,28 +13,8 @@ services:
       - ./apps/choreographer/.env
       - ./.env
     depends_on:
-      - auth
       - tasks
       - users
-      - rabbitmq
-    volumes:
-      - .:/usr/src/app
-    networks:
-      - backend
-  auth:
-    restart: on-failure
-    build:
-      context: .
-      dockerfile: ./apps/auth/Dockerfile
-      target: build
-    command: npm run start:dev auth
-    ports:
-      - '${AUTH_PORT}:${AUTH_PORT}'
-    env_file:
-      - ./apps/auth/.env
-      - ./.env
-    depends_on:
-      - users_database
       - rabbitmq
     volumes:
       - .:/usr/src/app
