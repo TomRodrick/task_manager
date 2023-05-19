@@ -18,11 +18,12 @@ export class UsersController {
     return this.usersService.createOne(payload);
   }
 
-  @EventPattern('find_user')
-  async findUser(@Body() id: number, @Ctx() context: RmqContext) {
-    this.rmqService.ackMessage(context);
-    return this.usersService.findById(+id);
-  }
+  //need to secure this method before exposing it
+  // @EventPattern('find_user')
+  // async findUser(@Body() id: number, @Ctx() context: RmqContext) {
+  //   this.rmqService.ackMessage(context);
+  //   return this.usersService.findById(+id);
+  // }
 
   //this type of stuff should be in its own auth queue
   @EventPattern('set_refresh_token')
@@ -32,5 +33,15 @@ export class UsersController {
   ) {
     this.rmqService.ackMessage(context);
     return this.usersService.updateRefreshToken(+payload.id, payload.token);
+  }
+
+  //this type of stuff should be in its own auth queue
+  @EventPattern('validate_user')
+  async validateUser(
+    @Body() payload: { email; password },
+    @Ctx() context: RmqContext,
+  ) {
+    this.rmqService.ackMessage(context);
+    return this.usersService.validateUser(payload);
   }
 }

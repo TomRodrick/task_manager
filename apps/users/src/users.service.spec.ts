@@ -4,7 +4,7 @@ import { UsersService } from './users.service';
 import { TypeOrmTestingModule, UserType } from '@app/common';
 import { User } from './user.entity';
 
-describe.only('UsersService', () => {
+describe('UsersService', () => {
   let usersService: UsersService;
 
   beforeEach(async () => {
@@ -22,36 +22,50 @@ describe.only('UsersService', () => {
   describe('createOne', () => {
     describe('When payload is invalid', () => {
       it('should enforce user_type value as manager or technician', async () => {
-        const res = (await usersService.createOne({
-          //@ts-ignore
-          user_type: 'asdasd',
-          email: 'test',
-        })) as any;
-
-        expect(res.error).toEqual(
-          'user_type must be either technician or manager',
-        );
-        expect(res.code).toEqual(400);
+        try {
+          await usersService.createOne({
+            //@ts-ignore
+            user_type: 'asdasd',
+            email: 'test',
+            password: 'test',
+          });
+        } catch (e) {
+          e = e.getError().response;
+          expect(e.message).toEqual(
+            'user_type must be either technician or manager',
+          );
+          expect(e.statusCode).toEqual(400);
+        }
       });
 
       it('should error if email does not exist', async () => {
-        //@ts-ignore
-        const res = (await usersService.createOne({
-          user_type: UserType.TECH,
-        })) as any;
-
-        expect(res.error).toEqual('email and user_type are required');
-        expect(res.code).toEqual(400);
+        try {
+          //@ts-ignore
+          await usersService.createOne({
+            user_type: UserType.TECH,
+          });
+        } catch (e) {
+          e = e.getError().response;
+          expect(e.message).toEqual(
+            'email, password, and user_type are required',
+          );
+          expect(e.statusCode).toEqual(400);
+        }
       });
 
       it('should error if user_type does not exist', async () => {
-        //@ts-ignore
-        const res = (await usersService.createOne({
-          email: 'test',
-        })) as any;
+        try {
+          await usersService.createOne({
+            email: 'test',
+          });
+        } catch (e) {
+          e = e.getError().response;
 
-        expect(res.error).toEqual('email and user_type are required');
-        expect(res.code).toEqual(400);
+          expect(e.message).toEqual(
+            'email, password, and user_type are required',
+          );
+          expect(e.statusCode).toEqual(400);
+        }
       });
     });
 
@@ -60,6 +74,7 @@ describe.only('UsersService', () => {
         const res = (await usersService.createOne({
           user_type: UserType.MANAGER,
           email: 'test',
+          password: 'test',
         })) as User;
 
         expect(res.email).toEqual('test');
@@ -79,22 +94,27 @@ describe.only('UsersService', () => {
       user = (await usersService.createOne({
         user_type: UserType.MANAGER,
         email: 'test',
+        password: 'test',
       })) as User;
     });
 
     describe('When arguments are valid', () => {
       it('Should return the correct user', async () => {
-        const res = (await usersService.findById(user.id)) as User;
+        const res = (await usersService.findById(+user.id)) as User;
         expect(res.id).toEqual(user.id);
         expect(res.email).toEqual(user.email);
       });
     });
     describe('When arguments are invalid', () => {
       it('Should return an error when id is invalid', async () => {
-        //@ts-ignore
-        const res = (await usersService.findById('id')) as any;
-        expect(res.code).toEqual(400);
-        expect(res.error).toEqual('id must be a number');
+        try {
+          //@ts-ignore
+          await usersService.findById('id');
+        } catch (e) {
+          e = e.getError().response;
+          expect(e.statusCode).toEqual(400);
+          expect(e.message).toEqual('id must be a number');
+        }
       });
     });
   });

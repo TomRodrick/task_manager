@@ -115,11 +115,11 @@ services:
     environment: ##This should be pulled from ci and public access should be limited by IP but leaving for now
       - RABBITMQ_DEFAULT_USER=user
       - RABBITMQ_DEFAULT_PASS=password
-    # healthcheck: ##todo: health checks for services
-    #   test: [ "CMD", "nc", "-z", "localhost", "5672" ]
-    #   interval: 5s
-    #   timeout: 15s
-    #   retries: 1
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "5672" ]
+      interval: 5s
+      timeout: 15s
+      retries: 1
     ports:
       - "5672:5672" ##todo:env var
       - "15672:15672"

@@ -42,7 +42,8 @@ export class UsersService {
   }
 
   //todo: we can probably create a base service and inherit methods like this
-  public async findById(id: number) {
+  //todo: this is insecure, should make sure users can't get other users if not a manager but only calling internally so will leave it for now & make private
+  private async findById(id: number) {
     if (typeof id !== 'number') {
       throw new RpcException(new BadRequestException('id must be a number'));
     }
@@ -56,5 +57,15 @@ export class UsersService {
       //so we don't accidenttally expose sensitive info about our db
       throw new RpcException(new BadRequestException(err.sqlMessage));
     });
+  }
+
+  public async validateUser(payoad: { email: string; password: string }) {
+    const query = { where: { email: payoad.email } };
+    const user = await this.repo.findOne(query).catch(() => {
+      return new User();
+    });
+
+    if (!user || !user.validPassword(payoad.password)) return {};
+    return user;
   }
 }

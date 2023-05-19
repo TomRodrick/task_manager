@@ -6,3 +6,5 @@ export * from './interface/taskPayload';
 export * from './constants';
 export * from './dto';
 export * from './db/test.db';
+export * from './auth';
+export * from './decorators';

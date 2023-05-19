@@ -1,6 +1,7 @@
 import { UserType } from '../enum/userType.enum';
 
 export interface ActiveUser {
-  id: number;
-  userType: UserType;
+  userId: number;
+  user_type: UserType;
+  email: string;
 }

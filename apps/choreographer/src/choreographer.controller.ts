@@ -1,3 +1,4 @@
+import { AuthService } from './auth/auth.service';
 import {
   Controller,
   Get,
@@ -7,8 +8,9 @@ import {
   Post,
   Patch,
   Delete,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { ChoreographerService } from './choreographer.service';
 import {
   TASKS_SERVICE,
   CreateTaskDto,
@@ -16,9 +18,11 @@ import {
   UpdateTaskDto,
   USERS_SERVICE,
   CreateUserDto,
+  Public,
 } from '@app/common';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { catchError, throwError } from 'rxjs';
+import { AuthGuard } from '@nestjs/passport';
 
 /**
  
@@ -30,12 +34,13 @@ export class ChoreographerController {
   constructor(
     @Inject(TASKS_SERVICE) private tasksClient: ClientProxy,
     @Inject(USERS_SERVICE) private usersClient: ClientProxy,
+    private authService: AuthService,
   ) {}
   /***********************BEGIN: TASK ROUTES*******************************/
   @Get('/tasks/list/:id')
-  async listTasks(@Param('id') id) {
+  async listTasks(@Request() req, @Param('id') id) {
     return this.tasksClient
-      .send('list_tasks', id)
+      .send('list_tasks', { id, activeUser: req.user })
       .pipe(
         catchError((error) =>
           throwError(() => new RpcException(error.response)),
@@ -44,7 +49,8 @@ export class ChoreographerController {
   }
 
   @Post('/tasks/create')
-  createTask(@Body() payload: Task_Payload<CreateTaskDto>) {
+  createTask(@Request() req, @Body() payload: Task_Payload<CreateTaskDto>) {
+    payload.activeUser = req.user;
     return this.tasksClient
       .send('create_task', payload)
       .pipe(
@@ -55,7 +61,8 @@ export class ChoreographerController {
   }
 
   @Patch('/tasks/complete')
-  completeTask(@Body() payload: Task_Payload<UpdateTaskDto>) {
+  completeTask(@Request() req, @Body() payload: Task_Payload<UpdateTaskDto>) {
+    payload.activeUser = req.user;
     return this.tasksClient
       .send('complete_task', payload)
       .pipe(
@@ -65,8 +72,10 @@ export class ChoreographerController {
       );
   }
 
+  //todo: create a decorator to automagically append activeUser to payload
   @Patch('/tasks/reopen')
-  reOpenTask(@Body() payload: Task_Payload<UpdateTaskDto>) {
+  reOpenTask(@Request() req, @Body() payload: Task_Payload<UpdateTaskDto>) {
+    payload.activeUser = req.user;
     return this.tasksClient
       .send('reopen_task', payload)
       .pipe(
@@ -77,9 +86,13 @@ export class ChoreographerController {
   }
 
   @Delete('/tasks/:id')
-  deleteTask(@Param('id') id: number) {
+  deleteTask(@Request() req, @Param('id') id: number) {
+    const payload = {
+      activeUser: req.user,
+      id,
+    };
     return this.tasksClient
-      .send('delete_task', id)
+      .send('delete_task', payload)
       .pipe(
         catchError((error) =>
           throwError(() => new RpcException(error.response)),
@@ -89,6 +102,7 @@ export class ChoreographerController {
   /***********************END: TASK ROUTES*******************************/
 
   /***********************BEGIN: USER ROUTES*******************************/
+  @Public()
   @Post('/users/create')
   createUser(@Body() payload: CreateUserDto) {
     return this.usersClient
@@ -100,14 +114,23 @@ export class ChoreographerController {
       );
   }
 
-  @Get('/users/:id')
-  findUser(@Param('id') id: number) {
-    return this.usersClient
-      .send('find_user', id)
-      .pipe(
-        catchError((error) =>
-          throwError(() => new RpcException(error.response)),
-        ),
-      );
+  // @Get('/users/:id')
+  // findUser(@Param('id') id: number) {
+  //   return this.usersClient
+  //     .send('find_user', id)
+  //     .pipe(
+  //       catchError((error) =>
+  //         throwError(() => new RpcException(error.response)),
+  //       ),
+  //     );
+  // }
+  /***********************End: USER ROUTES*******************************/
+
+  /***********************BEGIN: AUTH ROUTES*******************************/
+  @Public()
+  @UseGuards(AuthGuard('local'))
+  @Post('/auth/login')
+  login(@Request() req) {
+    return this.authService.login(req.user);
   }
 }

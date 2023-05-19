@@ -1,4 +1,4 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Global, Module } from '@nestjs/common';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { RmqService } from './rmq.service';
 import { ConfigService } from '@nestjs/config';
@@ -8,7 +8,7 @@ interface RmqModuleOptions {
   uri: string;
   queue: string;
 }
-
+@Global()
 @Module({
   providers: [RmqService],
   exports: [RmqService],
