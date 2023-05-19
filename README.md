@@ -20,7 +20,7 @@ The project is currently set to dev mode to easily interact with the code. It ca
 
 ## To Run the app
 
-1. **IMPORTANT: Make sure to create .env files in replacement of all project's example.env files!**
+1. **IMPORTANT: Make sure to create .env files in replacement example.env in the root!**
 
 ```bash
 docker-compose up

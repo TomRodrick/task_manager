@@ -219,7 +219,7 @@
 					"    body: {",
 					"        mode: 'urlencoded',",
 					"        urlencoded: [",
-					"            {key: 'email', value: \"tech2332233@email.com\"},",
+					"            {key: 'email', value: \"tech@email.com\"},",
 					"            {key: 'password', value: \"test\"}",
 					"        ]",
 					"    }",
