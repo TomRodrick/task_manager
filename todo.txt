@@ -1,0 +1,9 @@
+1. logic to ensure we never change a user’s salt/hash on accident
+2. Pagination on list methods
+3. Create base service with generic methods that can be inherited
+4. Password complexity validation
+5. Only ack write messages if the write succeeds!!!!
+6. Database init scripts/data seeding
+7. Choreographer integration tests
+8. Better application logging
+9. Logout logic
