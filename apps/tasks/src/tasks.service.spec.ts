@@ -12,11 +12,14 @@ describe.only('UsersService', () => {
     userId: 1,
     email: 'test',
   };
-  let task = {
+
+  const taskData = {
     title: 'test',
     description: 'test',
     id: undefined,
   };
+
+  let task;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -27,7 +30,7 @@ describe.only('UsersService', () => {
   });
 
   beforeEach(async () => {
-    task = await tasksService.createOne(task, activeUser);
+    task = (await tasksService.createOne(taskData, activeUser)) as Task;
   });
   it('TasksService should be defined', () => {
     expect(tasksService).toBeDefined();
@@ -82,7 +85,7 @@ describe.only('UsersService', () => {
       it('should error if id is not a number', async () => {
         try {
           //@ts-ignore
-          await tasksService.findById('', activeUser);
+          await tasksService.findById('');
         } catch (e) {
           validateError(e, 'id is required and must be a number');
         }
@@ -90,7 +93,7 @@ describe.only('UsersService', () => {
       it('should error if id is undefined', async () => {
         try {
           //@ts-ignore
-          await tasksService.findById(undefined, activeUser);
+          await tasksService.findById(undefined);
         } catch (e) {
           validateError(e, 'id is required and must be a number');
         }
@@ -98,7 +101,8 @@ describe.only('UsersService', () => {
     });
     describe('When payload is valid', () => {
       it('should fetch the task', async () => {
-        const savedTask = await tasksService.findById(task.id, activeUser);
+        //bracket access because its private
+        const savedTask = await tasksService['findById'](task.id);
         expect(savedTask.id).toEqual(task.id);
         expect(savedTask.title).toEqual(task.title);
         expect(savedTask.technician_id).toEqual(activeUser.userId);
@@ -106,21 +110,142 @@ describe.only('UsersService', () => {
     });
   });
   describe('createOne', () => {
-    describe('When payload is NOT valid', () => {});
-    describe('When payload is valid', () => {});
+    describe('When payload is NOT valid', () => {
+      it('Should error if a manager tries to create a task', async () => {
+        try {
+          await tasksService.createOne(taskData, {
+            ...activeUser,
+            user_type: UserType.MANAGER,
+          });
+        } catch (e) {
+          validateError(e, 'You do not have access to update this task', 401);
+        }
+      });
+      it('Should error if title is not provided', async () => {
+        try {
+          await tasksService.createOne(
+            { ...taskData, title: undefined },
+            activeUser,
+          );
+        } catch (e) {
+          validateError(e, "Fields 'title' and 'description' are required.");
+        }
+      });
+      it('Should error if description is not provided', async () => {
+        try {
+          await tasksService.createOne(
+            { ...taskData, description: undefined },
+            activeUser,
+          );
+        } catch (e) {
+          validateError(e, "Fields 'title' and 'description' are required.");
+        }
+      });
+    });
+    describe('When payload is valid', () => {
+      it('should create a task and assign it to the active user', async () => {
+        const savedTask = (await tasksService.createOne(
+          taskData,
+          activeUser,
+        )) as Task;
+        expect(savedTask.title).toBe(taskData.title);
+        expect(savedTask.description).toBe(taskData.description);
+        expect(savedTask.technician_id).toBe(activeUser.userId);
+      });
+    });
   });
+  //this is really just a db call and its private, so it'll essentially be tested in the following tasks
   describe('updateTask', () => {
     describe('When payload is NOT valid', () => {});
     describe('When payload is valid', () => {});
   });
   describe('completeTask', () => {
-    describe('When payload is NOT valid', () => {});
-    describe('When payload is valid', () => {});
+    let task2: Task;
+
+    beforeEach(async () => {
+      task2 = (await tasksService.createOne(taskData, {
+        ...activeUser,
+        userId: 100,
+      })) as Task;
+    });
+    describe('When payload is NOT valid', () => {
+      it('should error when a tech tries to update a task not assigned to him', async () => {
+        try {
+          await tasksService.completeTask(task2, activeUser);
+        } catch (e) {
+          validateError(e, 'You do not have access to update this task', 401);
+        }
+      });
+      it('should error when a manager tries to update a task', async () => {
+        try {
+          await tasksService.completeTask(task2, {
+            ...activeUser,
+            user_type: UserType.MANAGER,
+          });
+        } catch (e) {
+          validateError(e, 'You do not have access to update this task', 401);
+        }
+      });
+      it('should error when the task does not exist', async () => {
+        try {
+          await tasksService.completeTask(
+            { ...task, id: 10000 },
+            {
+              ...activeUser,
+              user_type: UserType.MANAGER,
+            },
+          );
+        } catch (e) {
+          validateError(e, 'Task could not be found', 404);
+        }
+      });
+    });
+    describe('When payload is valid', () => {
+      it('should set the completed_on date', async () => {
+        await tasksService.completeTask(task, activeUser);
+        const updatedTask = await tasksService['findById'](task.id);
+        expect(updatedTask.completed_on).toBeTruthy();
+      });
+    });
   });
   describe('reOpenTask', () => {
-    describe('When payload is NOT valid', () => {});
-    describe('When payload is valid', () => {});
+    describe('When payload is NOT valid', () => {
+      it('should error when a tech tries to update a task not assigned to him', async () => {
+        try {
+          await tasksService.reOpenTask(task, { ...activeUser, userId: 999 });
+        } catch (e) {
+          validateError(e, 'You do not have access to update this task', 401);
+        }
+      });
+      it('should error when a manager tries to update a task', async () => {
+        try {
+          await tasksService.reOpenTask(task, {
+            ...activeUser,
+            user_type: UserType.MANAGER,
+          });
+        } catch (e) {
+          validateError(e, 'You do not have access to update this task', 401);
+        }
+      });
+      it('should error when the task does not exist', async () => {
+        try {
+          await tasksService.reOpenTask({ ...task, id: 10000 }, activeUser);
+        } catch (e) {
+          validateError(e, 'Task could not be found', 404);
+        }
+      });
+    });
+    describe('When payload is valid', () => {
+      it('should set completed_on to be null', async () => {
+        await tasksService.completeTask(task, activeUser);
+        await tasksService.reOpenTask(task, activeUser);
+        const updatedTask = await tasksService['findById'](task.id);
+        expect(updatedTask.completed_on).toBe(null);
+      });
+    });
   });
+
+  //todo: userCanViewTaskList, userCanUpdateTask, userHasWritePermissions tests
   describe('userCanViewTaskList', () => {
     describe('When payload is NOT valid', () => {});
     describe('When payload is valid', () => {});

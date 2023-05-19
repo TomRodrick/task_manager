@@ -21,6 +21,25 @@ describe('UsersService', () => {
 
   describe('createOne', () => {
     describe('When payload is invalid', () => {
+      it('should error if email is NOT unique', async () => {
+        try {
+          await usersService.createOne({
+            user_type: UserType.MANAGER,
+            email: 'test',
+            password: 'test',
+          });
+          await usersService.createOne({
+            user_type: UserType.MANAGER,
+            email: 'test',
+            password: 'test',
+          });
+        } catch (e) {
+          //todo: use helper to remove all the duplicate error validation code
+          e = e.getError().response;
+          expect(e.message).toEqual('email already exists');
+          expect(e.statusCode).toEqual(400);
+        }
+      });
       it('should enforce user_type value as manager or technician', async () => {
         try {
           await usersService.createOne({
@@ -100,6 +119,7 @@ describe('UsersService', () => {
 
     describe('When arguments are valid', () => {
       it('Should return the correct user', async () => {
+        //@ts-ignore
         const res = (await usersService.findById(+user.id)) as User;
         expect(res.id).toEqual(user.id);
         expect(res.email).toEqual(user.email);

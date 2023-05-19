@@ -76,7 +76,7 @@ export class TasksService {
   }
 
   //todo: userCanUpdateTask logic should really live here, but we can leave it for now because this is private
-  public async updateTask(task: UpdateTaskDto) {
+  private async updateTask(task: UpdateTaskDto) {
     return this.repo.update(task.id, task).catch((err) => {
       //todo: ideally this is a switch base off the sql messsage
       //so we don't accidenttally expose sensitive info about our db
