@@ -1,6 +1,6 @@
 # Task Manager
 
-Task Manager is a nest.js app to create, update, and list tasks. It uses a blend of the orchestrator and then choreography pattern. 
+Task Manager is a nest.js app to create, update, and list tasks. It uses a blend of the orchestrator and the choreography pattern. 
 
 ## Requirements
 
